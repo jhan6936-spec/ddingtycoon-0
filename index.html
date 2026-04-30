@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>띵타이쿤 효율 계산기</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f0f0f;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+    .main-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    /* 사이드바 */
+    .sidebar {
+      width: 220px;
+      background: #1a1a1a;
+      border-right: 1px solid #333;
+      padding: 20px 0;
+      overflow-y: auto;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .sidebar-title {
+      padding: 15px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .nav-item {
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 14px;
+      color: #bbb;
+      border-left: 3px solid transparent;
+    }
+    .nav-item:hover {
+      background: #252525;
+      color: #fff;
+      border-left-color: #4a8fd9;
+    }
+    .nav-item.active {
+      background: #252525;
+      color: #4a8fd9;
+      border-left-color: #4a8fd9;
+      font-weight: 600;
+    }
+    .sub-nav {
+      margin-top: 6px;
+      padding-left: 8px;
+      display: none;
+    }
+    .sub-nav .sub-item {
+      padding: 8px 20px 8px 28px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 12px;
+      color: #9a9a9a;
+      border-left: 3px solid transparent;
+    }
+    .sub-nav .sub-item:hover {
+      background: #222;
+      color: #fff;
+      border-left-color: #4a8fd9;
+    }
+    .sub-nav .sub-item.active {
+      background: #222;
+      color: #4a8fd9;
+      border-left-color: #4a8fd9;
+      font-weight: 700;
+    }
+    /* 메인 컨텐츠 */
+    .main-content {
+      flex: 1;
+      padding: 30px 40px;
+      overflow-y: auto;
+    }
+    .header {
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 5px;
+    }
+    .header-subtitle {
+      font-size: 13px;
+      color: #888;
+    }
+    /* 검색 & 필터 */
+    .search-filter {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+      align-items: center;
+    }
+    .search-box {
+      flex: 1;
+      max-width: 400px;
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 10px 15px;
+      background: #1a1a1a;
+      color: #fff;
+      border: 1px solid #333;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .search-box input::placeholder {
+      color: #666;
+    }
+    .filter-select {
+      padding: 10px 15px;
+      background: #1a1a1a;
+      color: #fff;
+      border: 1px solid #333;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    /* 레시피 카드 그리드 */
+    .recipes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .recipe-card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .recipe-card:hover {
+      border-color: #4a8fd9;
+      box-shadow: 0 4px 12px rgba(74, 143, 217, 0.15);
+      transform: translateY(-2px);
+    }
+    .recipe-card-header {
+      padding: 15px;
+      background: #252525;
+      border-bottom: 1px solid #2a2a2a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .recipe-card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .recipe-card-price {
+      background: #4a8fd9;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .recipe-card-body {
+      padding: 15px;
+    }
+    .recipe-section {
+      margin-bottom: 15px;
+    }
+    .recipe-section:last-child {
+      margin-bottom: 0;
+    }
+    .recipe-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .ingredient-item {
+      display: flex;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 13px;
+      color: #bbb;
+    }
+    .ingredient-item:before {
+      content: "•";
+      margin-right: 8px;
+      color: #4a8fd9;
+      font-weight: bold;
+    }
+    .ingredient-name {
+      flex: 1;
+    }
+    .ingredient-count {
+      background: #2a2a2a;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #4a8fd9;
+      font-weight: 600;
+    }
+    /* 창고 섹션 */
+    .warehouse-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+    }
+    .warehouse-sections {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .warehouse-section {
+      background: rgba(26, 26, 26, 0.35);
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .warehouse-section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .warehouse-section-title h2 {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.2px;
+    }
+    .warehouse-section-sub {
+      font-size: 11px;
+      color: #888;
+      white-space: nowrap;
+    }
+    .warehouse-item {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      padding: 15px;
+      border-radius: 6px;
+    }
+    .warehouse-item-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .warehouse-item input {
+      width: 100%;
+      padding: 8px;
+      background: #252525;
+      color: #4a8fd9;
+      border: 1px solid #333;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* 창고 헤더 액션 */
+    .header-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .btn {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background: #1a1a1a;
+      color: #ddd;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .btn:hover {
+      background: #252525;
+      border-color: #4a8fd9;
+      color: #fff;
+    }
+    .btn.danger:hover {
+      border-color: #d94a4a;
+      color: #fff;
+    }
+
+    /* 공장 제작법 */
+    .factory-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #1a1a1a;
+      color: #bbb;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: #4a8fd9;
+      border-color: #4a8fd9;
+      color: #fff;
+    }
+    .factory-media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 14px;
+    }
+    .media-card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .media-card-title {
+      padding: 10px 12px;
+      background: #252525;
+      border-bottom: 1px solid #2a2a2a;
+      font-size: 12px;
+      font-weight: 800;
+      color: #eee;
+    }
+    .media-card-body {
+      padding: 10px 12px 12px;
+      color: #bbb;
+      font-size: 12px;
+    }
+    .media-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #0f0f0f;
+    }
+    .factory-video-wrap {
+      margin-top: 18px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .factory-video-title {
+      padding: 10px 12px;
+      background: #252525;
+      border-bottom: 1px solid #2a2a2a;
+      font-size: 12px;
+      font-weight: 900;
+      color: #fff;
+    }
+    .factory-video {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #000;
+    }
+
+    /* 계산기 팝업 */
+    .calc-popup {
+      position: fixed;
+      width: 280px;
+      background: #141414;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      z-index: 9999;
+      overflow: hidden;
+      display: none;
+    }
+    .calc-header {
+      padding: 10px 12px;
+      background: #1a1a1a;
+      border-bottom: 1px solid #2a2a2a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .calc-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #eee;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .calc-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #141414;
+      color: #bbb;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .calc-close:hover {
+      border-color: #4a8fd9;
+      color: #fff;
+    }
+    .calc-body {
+      padding: 12px;
+    }
+    .calc-modes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .mode-btn {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #1a1a1a;
+      color: #bbb;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .mode-btn.active {
+      background: #4a8fd9;
+      border-color: #4a8fd9;
+      color: #fff;
+    }
+    .calc-display {
+      background: #0f0f0f;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 10px 10px;
+      margin-bottom: 10px;
+    }
+    .calc-expr {
+      font-size: 12px;
+      color: #bbb;
+      min-height: 16px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .calc-result {
+      margin-top: 6px;
+      font-size: 18px;
+      font-weight: 800;
+      color: #4a8fd9;
+      letter-spacing: 0.2px;
+    }
+    .calc-keypad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .key {
+      padding: 10px 0;
+      border-radius: 10px;
+      border: 1px solid #2a2a2a;
+      background: #1a1a1a;
+      color: #eee;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .key:hover {
+      border-color: #4a8fd9;
+      transform: translateY(-1px);
+    }
+    .key.op {
+      color: #fff;
+      background: #252525;
+    }
+    .key.alt {
+      color: #ddd;
+      background: #1c1c1c;
+    }
+    .key.wide {
+      grid-column: span 2;
+    }
+    .calc-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .action-btn {
+      padding: 10px 0;
+      border-radius: 10px;
+      border: 1px solid #333;
+      background: #1a1a1a;
+      color: #eee;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .action-btn.primary {
+      background: #4a8fd9;
+      border-color: #4a8fd9;
+      color: #fff;
+    }
+    .action-btn.primary:hover {
+      filter: brightness(1.05);
+    }
+    .action-btn.secondary:hover {
+      border-color: #4a8fd9;
+    }
+    .action-btn.danger:hover {
+      border-color: #d94a4a;
+    }
+    /* 스크롤바 */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f0f0f;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #444;
+    }
+    .content-section {
+      display: none;
+    }
+    .content-section.active {
+      display: block;
+    }
+    /* 효율 분석 섹션 */
+    .efficiency-card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      transition: all 0.3s ease;
+    }
+    .efficiency-card:hover {
+      border-color: #4a8fd9;
+      box-shadow: 0 4px 12px rgba(74, 143, 217, 0.15);
+    }
+    .efficiency-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .efficiency-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .efficiency-badge {
+      background: #4a8fd9;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .efficiency-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .info-item {
+      background: #252525;
+      padding: 8px;
+      border-radius: 4px;
+      color: #bbb;
+    }
+    .info-label {
+      color: #888;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .info-value {
+      color: #4a8fd9;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .no-result {
+      text-align: center;
+      color: #666;
+      padding: 40px;
+      background: #1a1a1a;
+      border-radius: 8px;
+    }
+    /* 카테고리 필터 버튼 */
+    .category-filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .category-btn {
+      padding: 8px 16px;
+      background: #1a1a1a;
+      color: #bbb;
+      border: 1px solid #333;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    .category-btn:hover {
+      border-color: #555;
+      background: #252525;
+    }
+    .category-btn.active {
+      background: #4a8fd9;
+      color: #fff;
+      border-color: #4a8fd9;
+    }
+  </style>
+</head>
+<body>
+
+<div class="main-layout">
+  <!-- 사이드바 네비게이션 -->
+  <div class="sidebar">
+    <div class="sidebar-title">메뉴</div>
+    <div class="nav-item active" onclick="switchSection('craft')">제작 & 조합법</div>
+    <div class="nav-item" onclick="switchSection('warehouse')">재료 창고</div>
+    <div class="nav-item" onclick="switchSection('efficiency')">효율 분석</div>
+    <div class="nav-item" onclick="switchSection('factory')">공장 제작법</div>
+    <div id="factorySubNav" class="sub-nav">
+      <div class="sub-item" onclick="openFactorySub('seaweed')">해초 공장 제작법</div>
+      <div class="sub-item" onclick="openFactorySub('tunicate')">불우렁쉥이 제작법</div>
+    </div>
+  </div>
+
+  <!-- 메인 컨텐츠 -->
+  <div class="main-content">
+    <!-- 제작 & 조합법 섹션 -->
+    <div id="craft" class="content-section active">
+      <div class="header">
+        <h1>제작 & 조합법</h1>
+        <p class="header-subtitle">해양 아이템들을 제작하는 방법을 확인하세요</p>
+      </div>
+
+      <div class="search-filter">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="아이템 검색..." onkeyup="searchRecipes()">
+        </div>
+      </div>
+
+      <div id="recipesContainer" class="recipes-grid">
+        <!-- 레시피 카드들이 여기 생성됨 -->
+      </div>
+    </div>
+
+    <!-- 재료 창고 섹션 -->
+    <div id="warehouse" class="content-section">
+      <div class="header">
+        <div class="header-row">
+          <div>
+            <h1>재료 창고</h1>
+            <p class="header-subtitle">보유한 재료의 수량을 기입하세요</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn danger" type="button" onclick="resetAllWarehouse()">전체 초기화</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="warehouseContainer" class="warehouse-sections">
+        <!-- 재료 입력 항목들이 여기 생성됨 -->
+      </div>
+    </div>
+
+    <!-- 효율 분석 섹션 -->
+    <div id="efficiency" class="content-section">
+      <div class="header">
+        <h1>효율 분석</h1>
+        <p class="header-subtitle">보유한 재료로 만들 수 있는 최고 효율의 제작 루트를 확인하세요</p>
+      </div>
+
+      <div id="efficiencyContainer">
+        <div class="no-result">창고에서 재료 수량을 입력하면 자동으로 분석됩니다</div>
+      </div>
+    </div>
+
+    <!-- 공장 제작법 섹션 -->
+    <div id="factory" class="content-section">
+      <div class="header">
+        <h1>공장 제작법</h1>
+        <p class="header-subtitle">해초 공장 / 불우렁쉥이 제작법을 확인하세요</p>
+      </div>
+
+      <div class="factory-tabs">
+        <button class="tab-btn active" type="button" onclick="showFactorySub('seaweed')">해초 공장 제작법</button>
+        <button class="tab-btn" type="button" onclick="showFactorySub('tunicate')">불우렁쉥이 제작법</button>
+      </div>
+
+      <div id="factorySeaweed" style="display:block;">
+        <div class="factory-media-grid" id="seaweedMediaGrid"></div>
+
+        <div class="factory-video-wrap">
+          <div class="factory-video-title">실험 영상</div>
+          <video class="factory-video" id="seaweedVideo" controls playsinline preload="metadata">
+            <source src="factory/seaweed/experiment.mp4" type="video/mp4">
+          </video>
+        </div>
+      </div>
+
+      <div id="factoryTunicate" style="display:none;">
+        <div class="no-result">불우렁쉥이 제작법은 준비 중입니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 데이터 =====
+const data = {
+  materials: {
+    // 어패류 합성
+    "굴 ★": { inputs: [{ name: "굴 ★★", count: 1 }] },
+    "소라 ★": { inputs: [{ name: "소라 ★★", count: 1 }] },
+    "문어 ★": { inputs: [{ name: "문어 ★★", count: 1 }] },
+    "미역 ★": { inputs: [{ name: "미역 ★★", count: 1 }] },
+    "성게 ★": { inputs: [{ name: "성게 ★★", count: 1 }] },
+
+    // 0성 연금품
+    "추출된 희석액": { inputs: [{ name: "침식 방어의 핵 ★", count: 3 }, { name: "방어 오염의 결정 ★★", count: 2 }, { name: "타락 침식의 영약 ★★★", count: 1 }] },
+
+    // 1성 연금품
+    "수호의 정수 ★": { inputs: [{ name: "굴 ★", count: 2 }, { name: "점토", count: 2 }] },
+    "파동의 정수 ★": { inputs: [{ name: "소라 ★", count: 2 }, { name: "모래", count: 4 }] },
+    "혼란의 정수 ★": { inputs: [{ name: "문어 ★", count: 2 }, { name: "흙", count: 8 }] },
+    "생명의 정수 ★": { inputs: [{ name: "미역 ★", count: 2 }, { name: "자갈", count: 4 }] },
+    "부식의 정수 ★": { inputs: [{ name: "성게 ★", count: 2 }, { name: "화강암", count: 2 }] },
+    "물결 수호의 핵 ★": { inputs: [{ name: "수호의 정수 ★", count: 1 }, { name: "파동의 정수 ★", count: 1 }, { name: "깐 새우", count: 1 }] },
+    "파동 오염의 핵 ★": { inputs: [{ name: "파동의 정수 ★", count: 1 }, { name: "혼란의 정수 ★", count: 1 }, { name: "도미 회", count: 1 }] },
+    "질서 파괴의 핵 ★": { inputs: [{ name: "혼란의 정수 ★", count: 1 }, { name: "생명의 정수 ★", count: 1 }, { name: "청어 회", count: 1 }] },
+    "활력 붕괴의 핵 ★": { inputs: [{ name: "생명의 정수 ★", count: 1 }, { name: "부식의 정수 ★", count: 1 }, { name: "금붕어 회", count: 1 }] },
+    "침식 방어의 핵 ★": { inputs: [{ name: "부식의 정수 ★", count: 1 }, { name: "수호의 정수 ★", count: 1 }, { name: "농어 회", count: 1 }] },
+
+    // 2성 연금품
+    "수호 에센스 ★★": { inputs: [{ name: "굴 ★★", count: 2 }, { name: "해초", count: 6 }, { name: "참나무 잎", count: 6 }] },
+    "파동 에센스 ★★": { inputs: [{ name: "소라 ★★", count: 2 }, { name: "해초", count: 6 }, { name: "가문비나무 잎", count: 6 }] },
+    "혼란 에센스 ★★": { inputs: [{ name: "문어 ★★", count: 2 }, { name: "해초", count: 6 }, { name: "자작나무 잎", count: 6 }] },
+    "생명 에센스 ★★": { inputs: [{ name: "미역 ★★", count: 2 }, { name: "해초", count: 6 }, { name: "벚나무 잎", count: 6 }] },
+    "부식 에센스 ★★": { inputs: [{ name: "성게 ★★", count: 2 }, { name: "해초", count: 6 }, { name: "짙은 참나무 잎", count: 6 }] },
+    "활기 보존의 결정 ★★": { inputs: [{ name: "수호 에센스 ★★", count: 1 }, { name: "생명 에센스 ★★", count: 1 }, { name: "켈프", count: 8 }, { name: "청금석 블록", count: 1 }] },
+    "파도 침식의 결정 ★★": { inputs: [{ name: "파동 에센스 ★★", count: 1 }, { name: "부식 에센스 ★★", count: 1 }, { name: "켈프", count: 8 }, { name: "레드스톤 블록", count: 1 }] },
+    "방어 오염의 결정 ★★": { inputs: [{ name: "혼란 에센스 ★★", count: 1 }, { name: "수호 에센스 ★★", count: 1 }, { name: "켈프", count: 8 }, { name: "철 주괴", count: 3 }] },
+    "격류 재생의 결정 ★★": { inputs: [{ name: "생명 에센스 ★★", count: 1 }, { name: "파동 에센스 ★★", count: 1 }, { name: "켈프", count: 8 }, { name: "금 주괴", count: 2 }] },
+    "맹독 혼란의 결정 ★★": { inputs: [{ name: "부식 에센스 ★★", count: 1 }, { name: "혼란 에센스 ★★", count: 1 }, { name: "켈프", count: 8 }, { name: "다이아몬드", count: 1 }] },
+
+    // 3성 연금품품
+    "수호의 엘릭서 ★★★": { inputs: [{ name: "굴 ★★★", count: 1 }, { name: "불우렁쉥이", count: 2 }, { name: "유리병", count: 3 }, { name: "네더랙", count: 8 }] },
+    "파동의 엘릭서 ★★★": { inputs: [{ name: "소라 ★★★", count: 1 }, { name: "불우렁쉥이", count: 2 }, { name: "유리병", count: 3 }, { name: "마그마 블록", count: 4 }] },
+    "혼란의 엘릭서 ★★★": { inputs: [{ name: "문어 ★★★", count: 1 }, { name: "불우렁쉥이", count: 2 }, { name: "유리병", count: 3 }, { name: "영혼 흙", count: 4 }] },
+    "생명의 엘릭서 ★★★": { inputs: [{ name: "미역 ★★★", count: 1 }, { name: "불우렁쉥이", count: 2 }, { name: "유리병", count: 3 }, { name: "진홍빛 자루", count: 4 }] },
+    "부식의 엘릭서 ★★★": { inputs: [{ name: "성게 ★★★", count: 1 }, { name: "불우렁쉥이", count: 2 }, { name: "유리병", count: 3 }, { name: "뒤틀린 자루", count: 4 }] },
+    "불멸 재생의 영약 ★★★": { inputs: [{ name: "수호의 엘릭서 ★★★", count: 1 }, { name: "생명의 엘릭서 ★★★", count: 1 }, { name: "켈프", count: 12 }, { name: "발광 열매", count: 4 }, { name: "죽은 관 산호 블록", count: 2 }] },
+    "파동 장벽의 영약 ★★★": { inputs: [{ name: "파동의 엘릭서 ★★★", count: 1 }, { name: "수호의 엘릭서 ★★★", count: 1 }, { name: "켈프", count: 12 }, { name: "발광 열매", count: 4 }, { name: "죽은 사방산호 블록", count: 2 }] },
+    "타락 침식의 영약 ★★★": { inputs: [{ name: "혼란의 엘릭서 ★★★", count: 1 }, { name: "부식의 엘릭서 ★★★", count: 1 }, { name: "켈프", count: 12 }, { name: "발광 열매", count: 4 }, { name: "죽은 거품 산호 블록", count: 2 }] },
+    "생명 광란의 영약 ★★★": { inputs: [{ name: "생명의 엘릭서 ★★★", count: 1 }, { name: "혼란의 엘릭서 ★★★", count: 1 }, { name: "켈프", count: 12 }, { name: "발광 열매", count: 4 }, { name: "죽은 불 산호 블록", count: 2 }] },
+    "맹독 파동의 영약 ★★★": { inputs: [{ name: "부식의 엘릭서 ★★★", count: 1 }, { name: "파동의 엘릭서 ★★★", count: 1 }, { name: "켈프", count: 12 }, { name: "발광 열매", count: 4 }, { name: "죽은 뇌 산호 블록", count: 2 }] }
+  },
+  recipes: [
+    {
+      name: "영생의 아쿠티스",
+      inputs: [{ name: "물결 수호의 핵 ★", count: 1 }, { name: "질서 파괴의 핵 ★", count: 1 }, { name: "활력 붕괴의 핵 ★", count: 1 }],
+      time: 1,
+      price: 5159,
+      group: "group1"
+    },
+    {
+      name: "크라켄의 광란체",
+      inputs: [{ name: "질서 파괴의 핵 ★", count: 1 }, { name: "활력 붕괴의 핵 ★", count: 1 }, { name: "파동 오염의 핵 ★", count: 1 }],
+      time: 1,
+      price: 5234,
+      group: "group1"
+    },
+    {
+      name: "리바이던의 깃털",
+      inputs: [{ name: "침식 방어의 핵 ★", count: 1 }, { name: "파동 오염의 핵 ★", count: 1 }, { name: "물결 수호의 핵 ★", count: 1 }],
+      time: 1,
+      price: 5393,
+      group: "group1"
+    },
+    {
+      name: "해구 파동의 코어",
+      inputs: [{ name: "활기 보존의 결정 ★★", count: 1 }, { name: "파도 침식의 결정 ★★", count: 1 }, { name: "격류 재생의 결정 ★★", count: 1 }],
+      time: 1,
+      price: 11131,
+      group: "group2"
+    },
+    {
+      name: "침묵의 심해 비약",
+      inputs: [{ name: "파도 침식의 결정 ★★", count: 1 }, { name: "격류 재생의 결정 ★★", count: 1 }, { name: "맹독 혼란의 결정 ★★", count: 1 }],
+      time: 1,
+      price: 11242,
+      group: "group2"
+    },
+    {
+      name: "청해룡의 날개",
+      inputs: [{ name: "방어 오염의 결정 ★★", count: 1 }, { name: "맹독 혼란의 결정 ★★", count: 1 }, { name: "활기 보존의 결정 ★★", count: 1 }],
+      time: 1,
+      price: 11399,
+      group: "group2"
+    },
+    {
+      name: "아쿠아 펄스 파편",
+      inputs: [{ name: "불멸 재생의 영약 ★★★", count: 1 }, { name: "파동 장벽의 영약 ★★★", count: 1 }, { name: "맹독 파동의 영약 ★★★", count: 1 }],
+      time: 1,
+      price: 21833,
+      group: "group3"
+    },
+    {
+      name: "나우틸러스의 손",
+      inputs: [{ name: "파동 장벽의 영약 ★★★", count: 1 }, { name: "생명 광란의 영약 ★★★", count: 1 }, { name: "불멸 재생의 영약 ★★★", count: 1 }],
+      time: 1,
+      price: 22088,
+      group: "group3"
+    },
+    {
+      name: "무저의 척추",
+      inputs: [{ name: "타락 침식의 영약 ★★★", count: 1 }, { name: "맹독 파동의 영약 ★★★", count: 1 }, { name: "생명 광란의 영약 ★★★", count: 1 }],
+      time: 1,
+      price: 22227,
+      group: "group3"
+    }
+  ]
+};
+
+
+
+// 카테고리 매핑
+const categoryMap = {
+  'synthesis': ['굴 ★', '소라 ★', '문어 ★', '미역 ★', '성게 ★'],
+  'alchemy0': ['추출된 희석액'],
+  'alchemy1': ['물결 수호의 핵 ★', '파동 오염의 핵 ★', '질서 파괴의 핵 ★', '활력 붕괴의 핵 ★', '침식 방어의 핵 ★', '영생의 아쿠티스', '크라켄의 광란체 ★', '리바이던의 깃털 ★'],
+  'alchemy2': ['활기 보존의 결정 ★★', '파도 침식의 결정 ★★', '방어 오염의 결정 ★★', '격류 재생의 결정 ★★', '맹독 혼란의 결정 ★★', '해구 파동의 코어', '침묵의 심해 비약', '청해룡의 날개'],
+  'alchemy3': ['불멸 재생의 영약 ★★★', '파동 장벽의 영약 ★★★', '타락 침식의 영약 ★★★', '생명 광란의 영약 ★★★', '맹독 파동의 영약 ★★★', '아쿠아 펄스 파편', '나우틸러스의 손', '무저의 척추']
+};
+
+let currentFilter = 'all';
+let currentSearch = '';
+
+// ===== 창고 계산기(팝업) 상태 =====
+const SET_SIZE = 64;
+const calcState = {
+  isOpen: false,
+  targetInput: null,
+  materialName: '',
+  mode: 'count', // 'count' | 'set'
+  activePart: 'count', // 'count' | 'set' | 'rem'
+  countExpr: '',
+  setExpr: '',
+  remExpr: ''
+};
+
+function ensureCalcPopup() {
+  if (document.getElementById('calcPopup')) return;
+
+  const popup = document.createElement('div');
+  popup.id = 'calcPopup';
+  popup.className = 'calc-popup';
+  popup.innerHTML = `
+    <div class="calc-header">
+      <div class="calc-title" id="calcTitle">수량 입력</div>
+      <button class="calc-close" type="button" id="calcCloseBtn">×</button>
+    </div>
+    <div class="calc-body">
+      <div class="calc-modes">
+        <button type="button" class="mode-btn active" data-mode="count">개수량</button>
+        <button type="button" class="mode-btn" data-mode="set">세트당(64)</button>
+      </div>
+      <div class="calc-display">
+        <div class="calc-expr" id="calcExpr"></div>
+        <div class="calc-modes" id="calcPartModes" style="display:none; margin-top: 10px; margin-bottom: 0;">
+          <button type="button" class="mode-btn active" data-part="set">세트 입력</button>
+          <button type="button" class="mode-btn" data-part="rem">개 입력</button>
+        </div>
+        <div class="calc-result" id="calcResult">0</div>
+      </div>
+      <div class="calc-keypad" id="calcKeypad">
+        <button class="key alt" type="button" data-key="C">C</button>
+        <button class="key alt" type="button" data-key="BS">⌫</button>
+        <button class="key op" type="button" data-key="(">(</button>
+        <button class="key op" type="button" data-key=")">)</button>
+
+        <button class="key" type="button" data-key="7">7</button>
+        <button class="key" type="button" data-key="8">8</button>
+        <button class="key" type="button" data-key="9">9</button>
+        <button class="key op" type="button" data-key="/">÷</button>
+
+        <button class="key" type="button" data-key="4">4</button>
+        <button class="key" type="button" data-key="5">5</button>
+        <button class="key" type="button" data-key="6">6</button>
+        <button class="key op" type="button" data-key="*">×</button>
+
+        <button class="key" type="button" data-key="1">1</button>
+        <button class="key" type="button" data-key="2">2</button>
+        <button class="key" type="button" data-key="3">3</button>
+        <button class="key op" type="button" data-key="-">−</button>
+
+        <button class="key wide" type="button" data-key="0">0</button>
+        <button class="key" type="button" data-key=".">.</button>
+        <button class="key op" type="button" data-key="+">+</button>
+      </div>
+
+      <div class="calc-actions">
+        <button class="action-btn primary" type="button" id="calcApplyBtn">적용</button>
+        <button class="action-btn secondary" type="button" id="calcAddBtn">추가</button>
+        <button class="action-btn danger" type="button" id="calcResetBtn">초기화</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(popup);
+
+  // 닫기
+  popup.querySelector('#calcCloseBtn').addEventListener('click', closeCalculator);
+
+  // 모드 전환
+  popup.querySelectorAll('.mode-btn[data-mode]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const nextMode = btn.getAttribute('data-mode') || 'count';
+      if (nextMode === calcState.mode) return;
+      convertCalcMode(nextMode);
+      calcState.mode = nextMode;
+      calcState.activePart = nextMode === 'count' ? 'count' : 'set';
+      popup.querySelectorAll('.mode-btn[data-mode]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      syncCalcDisplay();
+    });
+  });
+
+  // 세트 모드에서 세트/개 입력 전환
+  popup.querySelector('#calcPartModes').addEventListener('click', (e) => {
+    const t = e.target;
+    if (!(t instanceof HTMLElement)) return;
+    const part = t.getAttribute('data-part');
+    if (!part) return;
+    if (calcState.mode !== 'set') return;
+    calcState.activePart = part;
+    popup.querySelectorAll('#calcPartModes .mode-btn').forEach(b => b.classList.remove('active'));
+    t.classList.add('active');
+  });
+
+  // 키패드
+  popup.querySelector('#calcKeypad').addEventListener('click', (e) => {
+    const t = e.target;
+    if (!(t instanceof HTMLElement)) return;
+    const key = t.getAttribute('data-key');
+    if (!key) return;
+    handleCalcKey(key);
+  });
+
+  // 액션
+  popup.querySelector('#calcApplyBtn').addEventListener('click', () => commitCalcValue('apply'));
+  popup.querySelector('#calcAddBtn').addEventListener('click', () => commitCalcValue('add'));
+  popup.querySelector('#calcResetBtn').addEventListener('click', () => commitCalcValue('reset'));
+
+  // 바깥 클릭으로 닫기
+  document.addEventListener('mousedown', (e) => {
+    if (!calcState.isOpen) return;
+    const pop = document.getElementById('calcPopup');
+    if (!pop) return;
+    const target = e.target;
+    if (!(target instanceof Node)) return;
+    if (pop.contains(target)) return;
+    if (calcState.targetInput && calcState.targetInput.contains(target)) return;
+    closeCalculator();
+  });
+
+  // 키보드 입력(esc, enter 등)
+  document.addEventListener('keydown', (e) => {
+    if (!calcState.isOpen) return;
+    if (e.key === 'Escape') {
+      closeCalculator();
+      return;
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitCalcValue('apply');
+      return;
+    }
+
+    // 숫자/연산자 입력 지원 (키패드 없이도 가능)
+    const allowed = '0123456789+-*/().';
+    if (allowed.includes(e.key)) {
+    if (calcState.mode === 'count') {
+      calcState.countExpr += e.key;
+    } else {
+      if (calcState.activePart === 'rem') calcState.remExpr += e.key;
+      else calcState.setExpr += e.key;
+    }
+
+    // 세트 모드 "개 입력"은 0~63 범위만 허용(키보드 입력)
+    if (calcState.mode === 'set' && calcState.activePart === 'rem') {
+      const trimmed = (calcState.remExpr || '').trim();
+      if (/^\d+$/.test(trimmed)) {
+        const n = parseInt(trimmed, 10);
+        if (Number.isFinite(n) && n >= SET_SIZE) {
+          calcState.remExpr = '63';
+        }
+      }
+    }
+    syncCalcDisplay();
+    e.preventDefault();
+    return;
+    }
+    if (e.key === 'Backspace') {
+      handleCalcKey('BS');
+      e.preventDefault();
+      return;
+    }
+  });
+}
+
+function openCalculatorForInput(inputEl) {
+  ensureCalcPopup();
+
+  const popup = document.getElementById('calcPopup');
+  if (!popup) return;
+
+  calcState.isOpen = true;
+  calcState.targetInput = inputEl;
+  calcState.materialName = inputEl.getAttribute('data-material') || '수량 입력';
+
+  // 새 입력(사용자가 계산/입력하는 용도)
+  calcState.countExpr = '';
+  calcState.setExpr = '';
+  calcState.remExpr = '';
+  calcState.activePart = calcState.mode === 'count' ? 'count' : 'set';
+  syncCalcDisplay();
+
+  // 위치: input 오른쪽, 화면 밖이면 아래/왼쪽으로 보정
+  const rect = inputEl.getBoundingClientRect();
+  const margin = 10;
+  const popupW = 280;
+  const popupH = 420; // 대략값, 보정용
+
+  let left = rect.right + margin;
+  let top = rect.top;
+
+  if (left + popupW > window.innerWidth - margin) {
+    left = Math.max(margin, rect.left - popupW - margin);
+  }
+  if (top + popupH > window.innerHeight - margin) {
+    top = Math.max(margin, window.innerHeight - popupH - margin);
+  }
+
+  popup.style.left = `${Math.round(left)}px`;
+  popup.style.top = `${Math.round(top)}px`;
+  popup.style.display = 'block';
+
+  const titleEl = document.getElementById('calcTitle');
+  if (titleEl) titleEl.textContent = calcState.materialName;
+}
+
+function closeCalculator() {
+  calcState.isOpen = false;
+  calcState.targetInput = null;
+  calcState.materialName = '';
+  calcState.countExpr = '';
+  calcState.setExpr = '';
+  calcState.remExpr = '';
+  calcState.activePart = 'count';
+  const popup = document.getElementById('calcPopup');
+  if (popup) popup.style.display = 'none';
+}
+
+function handleCalcKey(key) {
+  if (key === 'C') {
+    if (calcState.mode === 'count') calcState.countExpr = '';
+    else if (calcState.activePart === 'rem') calcState.remExpr = '';
+    else calcState.setExpr = '';
+    syncCalcDisplay();
+    return;
+  }
+  if (key === 'BS') {
+    if (calcState.mode === 'count') {
+      calcState.countExpr = calcState.countExpr.slice(0, -1);
+    } else {
+      if (calcState.activePart === 'rem') calcState.remExpr = calcState.remExpr.slice(0, -1);
+      else calcState.setExpr = calcState.setExpr.slice(0, -1);
+    }
+    syncCalcDisplay();
+    return;
+  }
+  if (calcState.mode === 'count') {
+    calcState.countExpr += key;
+  } else {
+    if (calcState.activePart === 'rem') calcState.remExpr += key;
+    else calcState.setExpr += key;
+  }
+
+  // 세트 모드 "개 입력"은 0~63 범위만 허용 (숫자만 단독 입력인 경우 즉시 제한)
+  if (calcState.mode === 'set' && calcState.activePart === 'rem') {
+    const trimmed = (calcState.remExpr || '').trim();
+    if (/^\d+$/.test(trimmed)) {
+      const n = parseInt(trimmed, 10);
+      if (Number.isFinite(n) && n >= SET_SIZE) {
+        calcState.remExpr = '63';
+      }
+    }
+  }
+  syncCalcDisplay();
+}
+
+function sanitizeExpr(expr) {
+  // 허용: 숫자, 공백, + - * / ( ) .
+  const cleaned = (expr || '')
+    .replace(/[×]/g, '*')
+    .replace(/[÷]/g, '/')
+    .replace(/[^0-9+\-*/().\s]/g, '')
+    .trim();
+  return cleaned;
+}
+
+function safeEval(expr) {
+  const cleaned = sanitizeExpr(expr);
+  if (!cleaned) return 0;
+  // 연속 연산자 같은 엣지는 JS가 처리하지만, 오류는 0으로
+  try {
+    // eslint-disable-next-line no-new-func
+    const v = Function(`"use strict"; return (${cleaned});`)();
+    if (typeof v !== 'number' || !Number.isFinite(v)) return null;
+    return v;
+  } catch {
+    return null;
+  }
+}
+
+function toNonNegativeInt(v) {
+  if (v === null) return null;
+  const n = Math.floor(v);
+  if (!Number.isFinite(n)) return null;
+  return Math.max(0, n);
+}
+
+function getTotalCountFromState() {
+  if (calcState.mode === 'count') {
+    const raw = safeEval(calcState.countExpr);
+    return toNonNegativeInt(raw);
+  }
+  const setRaw = safeEval(calcState.setExpr);
+  const remRaw = safeEval(calcState.remExpr);
+  if (setRaw === null || remRaw === null) return null;
+  const sets = toNonNegativeInt(setRaw);
+  const rem = toNonNegativeInt(remRaw);
+  if (sets === null || rem === null) return null;
+  if (rem >= SET_SIZE) return null;
+  return Math.max(0, sets * SET_SIZE + rem);
+}
+
+function getCalcResultValue() {
+  return getTotalCountFromState();
+}
+
+function syncCalcDisplay() {
+  const exprEl = document.getElementById('calcExpr');
+  const resultEl = document.getElementById('calcResult');
+  const partModes = document.getElementById('calcPartModes');
+
+  if (calcState.mode === 'set') {
+    if (partModes) partModes.style.display = 'grid';
+    const setText = (calcState.setExpr || '0');
+    const remText = (calcState.remExpr || '0');
+    if (exprEl) exprEl.textContent = `${setText}세트 ${remText}개`;
+
+    // part 버튼 active 보정
+    if (partModes) {
+      partModes.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = partModes.querySelector(`.mode-btn[data-part="${calcState.activePart === 'rem' ? 'rem' : 'set'}"]`);
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+  } else {
+    if (partModes) partModes.style.display = 'none';
+    if (exprEl) exprEl.textContent = calcState.countExpr || ' ';
+  }
+
+  if (resultEl) {
+    const v = getCalcResultValue();
+    if (v === null) {
+      resultEl.textContent = '오류';
+      resultEl.style.color = '#d94a4a';
+    } else {
+      resultEl.textContent = String(v);
+      resultEl.style.color = '#4a8fd9';
+    }
+  }
+}
+
+function convertCalcMode(nextMode) {
+  if (nextMode === 'set') {
+    // count -> set (총 개수를 n세트 m개로)
+    const raw = safeEval(calcState.countExpr);
+    const total = toNonNegativeInt(raw);
+    if (total === null) {
+      calcState.setExpr = '';
+      calcState.remExpr = '';
+      return;
+    }
+    const sets = Math.floor(total / SET_SIZE);
+    const rem = total % SET_SIZE;
+    calcState.setExpr = String(sets);
+    calcState.remExpr = String(rem);
+    return;
+  }
+
+  // set -> count (n세트 m개를 총 개수로)
+  const total = getTotalCountFromState();
+  if (total === null) {
+    calcState.countExpr = '';
+    return;
+  }
+  calcState.countExpr = String(total);
+}
+
+function commitCalcValue(action) {
+  if (!calcState.targetInput) return;
+  const inputEl = calcState.targetInput;
+
+  const current = parseInt(inputEl.value) || 0;
+  const computed = getCalcResultValue();
+  if (computed === null) return;
+
+  if (action === 'apply') {
+    inputEl.value = String(computed);
+  } else if (action === 'add') {
+    inputEl.value = String(Math.max(0, current + computed));
+  } else if (action === 'reset') {
+    inputEl.value = '0';
+    calcState.countExpr = '';
+    calcState.setExpr = '';
+    calcState.remExpr = '';
+    syncCalcDisplay();
+  }
+
+  analyzeEfficiency();
+}
+
+function resetAllWarehouse() {
+  const inputs = document.querySelectorAll('#warehouseContainer input[type="number"]');
+  inputs.forEach(i => { i.value = '0'; });
+  analyzeEfficiency();
+  closeCalculator();
+}
+
+// ===== 섹션 전환 =====
+function switchSection(sectionId) {
+  document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+  document.getElementById(sectionId).classList.add('active');
+  
+  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+  event.target.classList.add('active');
+
+  // 공장 하위 메뉴 표시/숨김
+  const sub = document.getElementById('factorySubNav');
+  if (sub) sub.style.display = (sectionId === 'factory') ? 'block' : 'none';
+  if (sectionId !== 'factory') {
+    document.querySelectorAll('#factorySubNav .sub-item').forEach(i => i.classList.remove('active'));
+  }
+  
+  if (sectionId === 'craft') {
+    renderRecipes();
+  } else if (sectionId === 'warehouse') {
+    renderWarehouse();
+  } else if (sectionId === 'efficiency') {
+    analyzeEfficiency();
+  } else if (sectionId === 'factory') {
+    renderFactorySeaweedMedia();
+  }
+}
+
+function openFactorySub(subKey) {
+  document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('factory').classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+  const factoryNav = Array.from(document.querySelectorAll('.nav-item')).find(n => (n.textContent || '').includes('공장 제작법'));
+  if (factoryNav) factoryNav.classList.add('active');
+
+  const sub = document.getElementById('factorySubNav');
+  if (sub) sub.style.display = 'block';
+  document.querySelectorAll('#factorySubNav .sub-item').forEach(i => i.classList.remove('active'));
+  if (event && event.target) event.target.classList.add('active');
+
+  showFactorySub(subKey);
+}
+
+function showFactorySub(subKey) {
+  const sea = document.getElementById('factorySeaweed');
+  const tun = document.getElementById('factoryTunicate');
+  const tabs = document.querySelectorAll('.factory-tabs .tab-btn');
+  tabs.forEach(t => t.classList.remove('active'));
+
+  if (subKey === 'tunicate') {
+    if (sea) sea.style.display = 'none';
+    if (tun) tun.style.display = 'block';
+    if (tabs[1]) tabs[1].classList.add('active');
+  } else {
+    if (sea) sea.style.display = 'block';
+    if (tun) tun.style.display = 'none';
+    if (tabs[0]) tabs[0].classList.add('active');
+    renderFactorySeaweedMedia();
+  }
+}
+
+function renderFactorySeaweedMedia() {
+  const grid = document.getElementById('seaweedMediaGrid');
+  if (!grid) return;
+  if (grid.getAttribute('data-rendered') === '1') return;
+
+  const items = [
+    { title: '1', src: 'factory/seaweed/1.png' },
+    { title: '2', src: 'factory/seaweed/2.png' },
+    { title: '3', src: 'factory/seaweed/3.png' },
+    { title: '4', src: 'factory/seaweed/4.png' },
+    { title: '5', src: 'factory/seaweed/5.png' },
+    { title: '6', src: 'factory/seaweed/6.png' },
+    { title: '7', src: 'factory/seaweed/7.png' },
+    { title: '8', src: 'factory/seaweed/8.png' },
+    { title: '9', src: 'factory/seaweed/9.png' },
+    { title: '10', src: 'factory/seaweed/10.png' },
+    { title: '11', src: 'factory/seaweed/11.png' }
+  ];
+
+  grid.innerHTML = '';
+  items.forEach(it => {
+    const card = document.createElement('div');
+    card.className = 'media-card';
+    card.innerHTML = `
+      <div class="media-card-title">단계 ${it.title}</div>
+      <img class="media-img" src="${it.src}" alt="단계 ${it.title}">
+      <div class="media-card-body" style="display:none;"></div>
+    `;
+    const img = card.querySelector('img');
+    if (img) {
+      img.addEventListener('error', () => {
+        img.style.display = 'none';
+        const body = card.querySelector('.media-card-body');
+        if (body) {
+          body.style.display = 'block';
+          body.textContent = `이미지 파일을 찾을 수 없습니다: ${it.src}`;
+        }
+      });
+    }
+    grid.appendChild(card);
+  });
+
+  grid.setAttribute('data-rendered', '1');
+}
+
+// ===== 레시피 필터링 =====
+function filterRecipes(category) {
+  currentFilter = category;
+  
+  document.querySelectorAll('.sidebar .nav-item').forEach(item => item.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  renderRecipes();
+}
+
+// ===== 레시피 검색 =====
+function searchRecipes() {
+  currentSearch = document.getElementById('searchInput').value.toLowerCase();
+  renderRecipes();
+}
+
+// ===== 레시피 카드 렌더링 =====
+function renderRecipes() {
+  const container = document.getElementById('recipesContainer');
+  let recipesToShow = [];
+  
+  if (currentFilter === 'all') {
+    recipesToShow = data.recipes;
+  } else {
+    const categoryItems = categoryMap[currentFilter] || [];
+    recipesToShow = data.recipes.filter(r => categoryItems.includes(r.name));
+  }
+  
+  if (currentSearch) {
+    recipesToShow = recipesToShow.filter(r => r.name.toLowerCase().includes(currentSearch));
+  }
+  
+  container.innerHTML = '';
+  
+  recipesToShow.forEach(recipe => {
+    const card = document.createElement('div');
+    card.className = 'recipe-card';
+    
+    let ingredientsHTML = '';
+    if (recipe.inputs.length > 0) {
+      ingredientsHTML = recipe.inputs.map(input => `
+        <div class="ingredient-item">
+          <span class="ingredient-name">${input.name}</span>
+          <span class="ingredient-count">${input.count}x</span>
+        </div>
+      `).join('');
+    } else {
+      ingredientsHTML = '<div style="color: #666; font-size: 12px;">기본 재료 없음</div>';
+    }
+    
+    card.innerHTML = `
+      <div class="recipe-card-header">
+        <div class="recipe-card-title">${recipe.name}</div>
+        <div class="recipe-card-price">${recipe.price}G</div>
+      </div>
+      <div class="recipe-card-body">
+        <div class="recipe-section">
+          <div class="recipe-section-title">필요 재료</div>
+          ${ingredientsHTML}
+        </div>
+      </div>
+    `;
+    
+    container.appendChild(card);
+  });
+  
+  if (recipesToShow.length === 0) {
+    container.innerHTML = '<p style="grid-column: 1/-1; color: #666; text-align: center; padding: 40px;">검색 결과가 없습니다</p>';
+  }
+}
+
+// ===== 창고 렌더링 =====
+function renderWarehouse() {
+  const container = document.getElementById('warehouseContainer');
+  container.innerHTML = '';
+  
+  // 창고에 표시할 전체 재료: (정의된 재료 + 모든 입력 재료) 합집합
+  const allMaterials = new Set();
+  Object.keys(data.materials).forEach(mat => allMaterials.add(mat));
+  Object.values(data.materials).forEach(recipe => {
+    (recipe.inputs || []).forEach(i => allMaterials.add(i.name));
+  });
+  (data.recipes || []).forEach(recipe => {
+    (recipe.inputs || []).forEach(i => allMaterials.add(i.name));
+  });
+
+  const isShellfishBase = (name) => /^(굴|소라|문어|미역|성게)\s+★+$/.test(name);
+  const starCount = (name) => {
+    const m = name.match(/★+/);
+    return m ? m[0].length : 0;
+  };
+
+  const pick = (arr, pred) => arr.filter(pred).sort((a, b) => a.localeCompare(b, 'ko'));
+  const all = Array.from(allMaterials);
+
+  // 어패류(1/2/3성)
+  const shellfish1 = pick(all, n => isShellfishBase(n) && starCount(n) === 1);
+  const shellfish2 = pick(all, n => isShellfishBase(n) && starCount(n) === 2);
+  const shellfish3 = pick(all, n => isShellfishBase(n) && starCount(n) === 3);
+
+  // 1성 연금품(핵/정수)
+  const alchemy1Core = pick(all, n => /핵\s+★$/.test(n));
+  const alchemy1Ess = pick(all, n => /정수\s+★$/.test(n));
+
+  // 2성 연금품(에센스/결정)
+  const alchemy2Ess = pick(all, n => /에센스\s+★★$/.test(n));
+  const alchemy2Crystal = pick(all, n => /결정\s+★★$/.test(n));
+
+  // 3성 연금품(엘릭서/영약)
+  const alchemy3Elixir = pick(all, n => /엘릭서\s+★★★$/.test(n));
+  const alchemy3Potion = pick(all, n => /영약\s+★★★$/.test(n));
+
+  const assigned = new Set([
+    ...shellfish1, ...shellfish2, ...shellfish3,
+    ...alchemy1Core, ...alchemy1Ess,
+    ...alchemy2Ess, ...alchemy2Crystal,
+    ...alchemy3Elixir, ...alchemy3Potion
+  ]);
+
+  const other = pick(all, n => !assigned.has(n));
+
+  function createSection(title, items, subtitle = '') {
+    if (!items || items.length === 0) return;
+    const section = document.createElement('div');
+    section.className = 'warehouse-section';
+    section.innerHTML = `
+      <div class="warehouse-section-title">
+        <h2>${title}</h2>
+        <div class="warehouse-section-sub">${subtitle || (items.length + '종')}</div>
+      </div>
+      <div class="warehouse-grid"></div>
+    `;
+
+    const grid = section.querySelector('.warehouse-grid');
+    items.forEach(material => {
+      const item = document.createElement('div');
+      item.className = 'warehouse-item';
+      item.innerHTML = `
+        <div class="warehouse-item-name">${material}</div>
+        <input type="number" min="0" value="0" data-material="${material}" placeholder="수량 입력">
+      `;
+      grid.appendChild(item);
+    });
+
+    container.appendChild(section);
+  }
+
+  createSection('어패류 (1성)', shellfish1);
+  createSection('어패류 (2성)', shellfish2);
+  createSection('어패류 (3성)', shellfish3);
+
+  createSection('1성 연금품 - 핵', alchemy1Core);
+  createSection('1성 연금품 - 정수', alchemy1Ess);
+
+  createSection('2성 연금품 - 에센스', alchemy2Ess);
+  createSection('2성 연금품 - 결정', alchemy2Crystal);
+
+  createSection('3성 연금품 - 엘릭서', alchemy3Elixir);
+  createSection('3성 연금품 - 영약', alchemy3Potion);
+
+  createSection('기타 재료', other);
+  
+  // 입력 필드에 이벤트 리스너 추가
+  const inputs = document.querySelectorAll('#warehouseContainer input[type="number"]');
+  inputs.forEach(input => {
+    input.addEventListener('change', analyzeEfficiency);
+    input.addEventListener('input', analyzeEfficiency);
+    input.addEventListener('focus', () => openCalculatorForInput(input));
+    input.addEventListener('click', () => openCalculatorForInput(input));
+  });
+}
+
+// ===== 창고에서 현재 수량 가져오기 =====
+function getWarehouseInventory() {
+  const inventory = {};
+  const inputs = document.querySelectorAll('#warehouseContainer input[type="number"]');
+  inputs.forEach(input => {
+    const material = input.getAttribute('data-material');
+    inventory[material] = parseInt(input.value) || 0;
+  });
+  return inventory;
+}
+
+// ===== 재료 수량 가져오기 (요리 가능 최대량 계산) =====
+function calculateMaxCraft(recipe, inventory, memo = {}) {
+  if (!recipe.inputs || recipe.inputs.length === 0) {
+    return Infinity;
+  }
+  
+  let maxCount = Infinity;
+  
+  for (let input of recipe.inputs) {
+    let available = inventory[input.name] || 0;
+    
+    // 만약 필요한 재료가 materials에 정의되어 있다면, 그것을 재귀적으로 제작 가능
+    if (input.name in data.materials) {
+      const materialRecipe = data.materials[input.name];
+      const craftableFromRecipe = calculateMaxCraft(materialRecipe, inventory, memo);
+      available += craftableFromRecipe;
+    }
+    
+    const possibleCount = Math.floor(available / input.count);
+    maxCount = Math.min(maxCount, possibleCount);
+  }
+  
+  return maxCount === Infinity ? 0 : maxCount;
+}
+
+// ===== 최종 산물에 필요한 모든 재료 계산 =====
+function calculateRequiredMaterials(recipe, count, visited = new Set()) {
+  const required = {};
+  
+  if (!recipe.inputs || recipe.inputs.length === 0) {
+    return required;
+  }
+  
+  for (let input of recipe.inputs) {
+    const neededCount = input.count * count;
+    
+    if (!required[input.name]) {
+      required[input.name] = 0;
+    }
+    required[input.name] += neededCount;
+    
+    // 중간 재료를 만들 수 있는지 확인
+    if (input.name in data.materials && !visited.has(input.name)) {
+      visited.add(input.name);
+      const subRequired = calculateRequiredMaterials(data.materials[input.name], neededCount, visited);
+      for (let [mat, matCount] of Object.entries(subRequired)) {
+        if (!required[mat]) {
+          required[mat] = 0;
+        }
+        required[mat] += matCount;
+      }
+    }
+  }
+  
+  return required;
+}
+
+// ===== 효율성 분석 =====
+function analyzeEfficiency() {
+  const inventory = getWarehouseInventory();
+  const hasItems = Object.values(inventory).some(v => v > 0);
+  
+  if (!hasItems) {
+    document.getElementById('efficiencyContainer').innerHTML = 
+      '<div class="no-result">창고에서 재료 수량을 입력하면 자동으로 분석됩니다</div>';
+    return;
+  }
+  
+  const results = [];
+  
+  // 각 최종 산물에 대해 분석
+  data.recipes.forEach(recipe => {
+    const maxCraft = calculateMaxCraft(recipe, inventory);
+    
+    if (maxCraft > 0) {
+      results.push({
+        name: recipe.name,
+        maxCount: maxCraft,
+        price: recipe.price,
+        totalPrice: recipe.price * maxCraft,
+        efficiency: (recipe.price * maxCraft) / (recipe.time || 1),
+        recipe: recipe,
+        requiredMaterials: calculateRequiredMaterials(recipe, maxCraft)
+      });
+    }
+  });
+  
+  // 효율성순으로 정렬
+  results.sort((a, b) => b.efficiency - a.efficiency);
+  
+  // UI 렌더링
+  const container = document.getElementById('efficiencyContainer');
+  container.innerHTML = '';
+  
+  if (results.length === 0) {
+    container.innerHTML = '<div class="no-result">현재 보유한 재료로는 제작할 수 있는 아이템이 없습니다</div>';
+    return;
+  }
+  
+  results.slice(0, 20).forEach((result, index) => {
+    const card = document.createElement('div');
+    card.className = 'efficiency-card';
+    
+    // 필요한 재료 목록
+    const requiredList = Object.entries(result.requiredMaterials)
+      .map(([mat, count]) => {
+        const current = inventory[mat] || 0;
+        const status = current >= count ? '✓' : '✗';
+        return `<div style="font-size: 11px; color: #888;">${status} ${mat}: ${count}</div>`;
+      })
+      .join('');
+    
+    card.innerHTML = `
+      <div class="efficiency-header">
+        <div class="efficiency-title">${result.name}</div>
+        <div class="efficiency-badge">#${index + 1}</div>
+      </div>
+      <div class="efficiency-info">
+        <div class="info-item">
+          <div class="info-label">제작 가능 수량</div>
+          <div class="info-value">${result.maxCount}개</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">총 획득 수익</div>
+          <div class="info-value">${result.totalPrice.toLocaleString()}G</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">효율성</div>
+          <div class="info-value">${Math.round(result.efficiency).toLocaleString()}/분</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">개당 가격</div>
+          <div class="info-value">${result.price.toLocaleString()}G</div>
+        </div>
+      </div>
+      <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #2a2a2a;">
+        <div style="font-size: 12px; font-weight: 600; color: #bbb; margin-bottom: 8px;">필요 재료:</div>
+        ${requiredList}
+      </div>
+    `;
+    
+    container.appendChild(card);
+  });
+}
+
+// ===== 초기 렌더링 =====
+window.addEventListener('DOMContentLoaded', function() {
+  renderRecipes();
+  renderWarehouse();
+  renderFactorySeaweedMedia();
+});
+</script>
+
+</body>
+</html>
